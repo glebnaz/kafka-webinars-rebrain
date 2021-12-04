@@ -1,0 +1,151 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "cookie",
+    "version": "version not set"
+  },
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/pet/delete": {
+      "delete": {
+        "operationId": "PetStore_DeletePet",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeletePetResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "petID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "PetStore"
+        ]
+      }
+    },
+    "/pet/get": {
+      "get": {
+        "operationId": "PetStore_GetPet",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetPetResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "pet_id",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "PetStore"
+        ]
+      }
+    },
+    "/pet/put": {
+      "post": {
+        "operationId": "PetStore_PutPet",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1PutPetResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1PutPetRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PetStore"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "v1DeletePetResponse": {
+      "type": "object"
+    },
+    "v1GetPetResponse": {
+      "type": "object",
+      "properties": {
+        "pet": {
+          "$ref": "#/definitions/v1Pet"
+        }
+      }
+    },
+    "v1Pet": {
+      "type": "object",
+      "properties": {
+        "pet_type": {
+          "$ref": "#/definitions/v1PetType"
+        },
+        "pet_id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "description": "Pet represents a pet in the pet store."
+    },
+    "v1PetType": {
+      "type": "string",
+      "enum": [
+        "PET_TYPE_UNSPECIFIED",
+        "PET_TYPE_CAT",
+        "PET_TYPE_DOG",
+        "PET_TYPE_SNAKE",
+        "PET_TYPE_HAMSTER"
+      ],
+      "default": "PET_TYPE_UNSPECIFIED",
+      "description": "PetType represents the different types of pets in the pet store."
+    },
+    "v1PutPetRequest": {
+      "type": "object",
+      "properties": {
+        "pet_type": {
+          "$ref": "#/definitions/v1PetType"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "v1PutPetResponse": {
+      "type": "object",
+      "properties": {
+        "pet": {
+          "$ref": "#/definitions/v1Pet"
+        }
+      }
+    }
+  }
+}

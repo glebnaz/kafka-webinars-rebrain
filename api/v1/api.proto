@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+//cookie
+package pet.v1;
+
+option go_package = "pb/v1";
+
+import "google/api/annotations.proto";
+
+// PetType represents the different types of pets in the pet store.
+enum PetType {
+  PET_TYPE_UNSPECIFIED = 0;
+  PET_TYPE_CAT = 1;
+  PET_TYPE_DOG = 2;
+  PET_TYPE_SNAKE = 3;
+  PET_TYPE_HAMSTER = 4;
+}
+
+// Pet represents a pet in the pet store.
+message Pet {
+  PetType pet_type = 1;
+  string pet_id = 2;
+  string name = 3;
+}
+
+message GetPetRequest {
+  string pet_id = 1;
+}
+
+message GetPetResponse {
+  Pet pet = 1;
+}
+
+message PutPetRequest {
+  PetType pet_type = 1;
+  string id = 3;
+  string name = 2;
+}
+
+message PutPetResponse {
+  Pet pet = 1;
+}
+
+message DeletePetRequest {
+  string petID = 1;
+}
+
+message DeletePetResponse {}
+
+service PetStore {
+  rpc GetPet(GetPetRequest) returns (GetPetResponse) {
+    option (google.api.http) = {
+      get: "/pet/get"
+    };
+  }
+  rpc PutPet(PutPetRequest) returns (PutPetResponse) {
+    option (google.api.http) = {
+      post: "/pet/put"
+      body: "*"
+    };
+  }
+  rpc DeletePet(DeletePetRequest) returns (DeletePetResponse) {
+    option (google.api.http) = {
+      delete: "/pet/delete"
+    };
+  }
+
+}
