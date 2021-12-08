@@ -11,62 +11,14 @@
     "application/json"
   ],
   "paths": {
-    "/pet/delete": {
-      "delete": {
-        "operationId": "PetStore_DeletePet",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1DeletePetResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "petID",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "PetStore"
-        ]
-      }
-    },
-    "/pet/get": {
-      "get": {
-        "operationId": "PetStore_GetPet",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1GetPetResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "pet_id",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "PetStore"
-        ]
-      }
-    },
-    "/pet/put": {
+    "/create/post": {
       "post": {
-        "operationId": "PetStore_PutPet",
+        "operationId": "TwitterService_CreatePost",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1PutPetResponse"
+              "$ref": "#/definitions/v1CreatePostResponse"
             }
           }
         },
@@ -76,74 +28,95 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1PutPetRequest"
+              "$ref": "#/definitions/v1CreatePostRequest"
             }
           }
         ],
         "tags": [
-          "PetStore"
+          "TwitterService"
+        ]
+      }
+    },
+    "/get/feed": {
+      "post": {
+        "operationId": "TwitterService_GetFeed",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetFeedResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1GetFeedRequest"
+            }
+          }
+        ],
+        "tags": [
+          "TwitterService"
         ]
       }
     }
   },
   "definitions": {
-    "v1DeletePetResponse": {
-      "type": "object"
-    },
-    "v1GetPetResponse": {
+    "v1CreatePostRequest": {
       "type": "object",
       "properties": {
-        "pet": {
-          "$ref": "#/definitions/v1Pet"
+        "post": {
+          "$ref": "#/definitions/v1Post"
         }
       }
     },
-    "v1Pet": {
+    "v1CreatePostResponse": {
       "type": "object",
       "properties": {
-        "pet_type": {
-          "$ref": "#/definitions/v1PetType"
-        },
-        "pet_id": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
+        "post": {
+          "$ref": "#/definitions/v1Post"
         }
-      },
-      "description": "Pet represents a pet in the pet store."
+      }
     },
-    "v1PetType": {
-      "type": "string",
-      "enum": [
-        "PET_TYPE_UNSPECIFIED",
-        "PET_TYPE_CAT",
-        "PET_TYPE_DOG",
-        "PET_TYPE_SNAKE",
-        "PET_TYPE_HAMSTER"
-      ],
-      "default": "PET_TYPE_UNSPECIFIED",
-      "description": "PetType represents the different types of pets in the pet store."
-    },
-    "v1PutPetRequest": {
+    "v1GetFeedRequest": {
       "type": "object",
       "properties": {
-        "pet_type": {
-          "$ref": "#/definitions/v1PetType"
-        },
+        "user_id": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "v1GetFeedResponse": {
+      "type": "object",
+      "properties": {
+        "post": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Post"
+          }
+        }
+      }
+    },
+    "v1Post": {
+      "type": "object",
+      "properties": {
         "id": {
           "type": "string"
         },
-        "name": {
+        "payload": {
           "type": "string"
-        }
-      }
-    },
-    "v1PutPetResponse": {
-      "type": "object",
-      "properties": {
-        "pet": {
-          "$ref": "#/definitions/v1Pet"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "int64"
+        },
+        "created_by": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     }

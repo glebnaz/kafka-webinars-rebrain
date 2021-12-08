@@ -103,10 +103,10 @@ func newApp(ctx context.Context, grpcOPTS ...grpc.ServerOption) app {
 	}
 }
 
-func grpcServer(srv *services.Service, grpcOPTS []grpc.ServerOption) *grpc.Server {
+func grpcServer(srv *services.TwitterService, grpcOPTS []grpc.ServerOption) *grpc.Server {
 	//grpc server
 	grpcServer := grpc.NewServer(grpcOPTS...)
-	pb.RegisterPetStoreServer(grpcServer, srv)
+	pb.RegisterTwitterServiceServer(grpcServer, srv)
 
 	return grpcServer
 }
@@ -125,7 +125,7 @@ func httpServer(ctx context.Context, endpoint string) *runtime.ServeMux {
 	var jsonPb runtime.JSONPb
 	jsonPb.UseProtoNames = true
 	mux := runtime.NewServeMux(runtime.WithMarshalerOption(runtime.MIMEWildcard, &jsonPb))
-	mustInit(pb.RegisterPetStoreHandlerFromEndpoint(ctx, mux, endpoint, []grpc.DialOption{grpc.WithInsecure()}))
+	mustInit(pb.RegisterTwitterServiceHandlerFromEndpoint(ctx, mux, endpoint, []grpc.DialOption{grpc.WithInsecure()}))
 	return mux
 }
 
