@@ -22,6 +22,15 @@ service TwitterService {
   }
 }
 
+service TwitterServiceFeed {
+  rpc GetFeed(GetFeedRequest) returns (GetFeedResponse) {
+    option (google.api.http) = {
+      post: "/get/feed"
+      body: "*"
+    };
+  }
+}
+
 
 message Post {
   string id = 1;

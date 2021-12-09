@@ -133,3 +133,87 @@ var TwitterService_ServiceDesc = grpc.ServiceDesc{
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "api/v1/api.proto",
 }
+
+// TwitterServiceFeedClient is the client API for TwitterServiceFeed service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type TwitterServiceFeedClient interface {
+	GetFeed(ctx context.Context, in *GetFeedRequest, opts ...grpc.CallOption) (*GetFeedResponse, error)
+}
+
+type twitterServiceFeedClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewTwitterServiceFeedClient(cc grpc.ClientConnInterface) TwitterServiceFeedClient {
+	return &twitterServiceFeedClient{cc}
+}
+
+func (c *twitterServiceFeedClient) GetFeed(ctx context.Context, in *GetFeedRequest, opts ...grpc.CallOption) (*GetFeedResponse, error) {
+	out := new(GetFeedResponse)
+	err := c.cc.Invoke(ctx, "/twitter_service.v1.TwitterServiceFeed/GetFeed", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// TwitterServiceFeedServer is the server API for TwitterServiceFeed service.
+// All implementations should embed UnimplementedTwitterServiceFeedServer
+// for forward compatibility
+type TwitterServiceFeedServer interface {
+	GetFeed(context.Context, *GetFeedRequest) (*GetFeedResponse, error)
+}
+
+// UnimplementedTwitterServiceFeedServer should be embedded to have forward compatible implementations.
+type UnimplementedTwitterServiceFeedServer struct {
+}
+
+func (UnimplementedTwitterServiceFeedServer) GetFeed(context.Context, *GetFeedRequest) (*GetFeedResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetFeed not implemented")
+}
+
+// UnsafeTwitterServiceFeedServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to TwitterServiceFeedServer will
+// result in compilation errors.
+type UnsafeTwitterServiceFeedServer interface {
+	mustEmbedUnimplementedTwitterServiceFeedServer()
+}
+
+func RegisterTwitterServiceFeedServer(s grpc.ServiceRegistrar, srv TwitterServiceFeedServer) {
+	s.RegisterService(&TwitterServiceFeed_ServiceDesc, srv)
+}
+
+func _TwitterServiceFeed_GetFeed_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetFeedRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TwitterServiceFeedServer).GetFeed(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/twitter_service.v1.TwitterServiceFeed/GetFeed",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TwitterServiceFeedServer).GetFeed(ctx, req.(*GetFeedRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// TwitterServiceFeed_ServiceDesc is the grpc.ServiceDesc for TwitterServiceFeed service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var TwitterServiceFeed_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "twitter_service.v1.TwitterServiceFeed",
+	HandlerType: (*TwitterServiceFeedServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "GetFeed",
+			Handler:    _TwitterServiceFeed_GetFeed_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "api/v1/api.proto",
+}

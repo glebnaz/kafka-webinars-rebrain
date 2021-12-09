@@ -72,6 +72,15 @@ func (f *FeedStore) AddPostToUsers(subs []int32, post Post) {
 	}
 }
 
+func (f *FeedStore) GetFeed(id int32) []Post {
+	f.m.Lock()
+	defer f.m.Unlock()
+
+	posts := f.data[id]
+
+	return posts
+}
+
 func NewFeedStore() FeedStore {
 	d := make(map[int32][]Post)
 	return FeedStore{

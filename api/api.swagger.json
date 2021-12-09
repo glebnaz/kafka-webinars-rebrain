@@ -39,7 +39,7 @@
     },
     "/get/feed": {
       "post": {
-        "operationId": "TwitterService_GetFeed",
+        "operationId": "TwitterServiceFeed_GetFeed",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -59,7 +59,7 @@
           }
         ],
         "tags": [
-          "TwitterService"
+          "TwitterServiceFeed"
         ]
       }
     }

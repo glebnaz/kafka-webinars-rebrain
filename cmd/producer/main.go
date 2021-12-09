@@ -20,7 +20,6 @@ func init() {
 }
 
 func main() {
-
 	ctx := context.Background()
 
 	app := newApp(ctx, grpc.UnaryInterceptor(grpcInternal.NewServerUnaryLoggerInterceptor()))
