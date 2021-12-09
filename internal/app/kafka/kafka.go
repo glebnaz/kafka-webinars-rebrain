@@ -4,8 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/Shopify/sarama"
+	"github.com/opentracing/opentracing-go"
+	logs "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"runtime/debug"
+	"strings"
 	"time"
 )
 
@@ -90,35 +93,64 @@ type TopicConsumer struct {
 	groupID    string
 }
 
-func (tc *TopicConsumer) Run(opts ...RunOption) {
-	runOpts := &RunOptions{
-		commitStrategy: func(cgs sarama.ConsumerGroupSession, cm *sarama.ConsumerMessage, e error) {
-			cgs.MarkMessage(cm, "")
-		},
+func (h *handler) ConsumeClaim(cgSession sarama.ConsumerGroupSession, cgClaim sarama.ConsumerGroupClaim) error {
+	names := strings.Split(h.groupID, ":")
+	service := ""
+	branch := ""
+	if len(names) == 2 {
+		service = names[0]
+		branch = strings.Replace(names[1], "/", "-", -1)
 	}
-	for _, opt := range opts {
-		opt(runOpts)
-	}
-	var ctx context.Context
-	ctx, tc.cancel = context.WithCancel(context.Background())
-	go func() {
-		for {
-			if ctx.Err() == context.Canceled {
-				break
+
+	for {
+		select {
+		case msg, ok := <-cgClaim.Messages():
+			if !ok {
+				return nil
 			}
-			if err := tc.client.Consume(ctx, tc.topics, &handler{
-				msgHandler:     tc.msgHandler,
-				retries:        runOpts.retries,
-				timeout:        runOpts.timeout,
-				setup:          runOpts.setup,
-				cleanup:        runOpts.cleanup,
-				commitStrategy: runOpts.commitStrategy,
-				groupID:        tc.groupID,
-			}); err != nil {
-				//залогать ошибку
+			ctx := context.Background()
+
+			var span opentracing.Span
+			msgCtx, err := Extract(ctx, msg.Headers)
+			if err != nil {
+				span, msgCtx = opentracing.StartSpanFromContext(ctx, "Kafka Read Sync")
+			} else {
+				span = opentracing.SpanFromContext(msgCtx)
 			}
+			if span != nil {
+				span.SetTag("span.kind", "kafka_read_sync")
+				span.SetTag("kafka.group_id", h.groupID)
+				span.LogFields(logs.String("topic", msg.Topic))
+				span.LogKV("partition", msg.Partition)
+				span.LogKV("offset", msg.Offset)
+			}
+
+			mCtx, mesh := ExtractMesh(msgCtx, msg.Headers)
+			if mesh != nil {
+				if val, ok := mesh[service]; ok && !strings.EqualFold(val, branch) {
+					continue
+				}
+			}
+
+			err = retry(h.retries, h.timeout, func() error {
+				return h.msgHandler.Handle(mCtx, msg)
+			})
+			h.commitStrategy(cgSession, msg, err)
+			if err != nil {
+				if span != nil {
+					span.SetTag("error", true)
+					span.LogFields(logs.String("error", err.Error()))
+					span.Finish()
+				}
+				return err
+			}
+			if span != nil {
+				span.Finish()
+			}
+		case <-cgSession.Context().Done():
+			return nil
 		}
-	}()
+	}
 }
 
 func (tc *TopicConsumer) Stop() {
@@ -163,36 +195,11 @@ func (h *handler) Cleanup(cgSession sarama.ConsumerGroupSession) error {
 	return nil
 }
 
-func (h *handler) ConsumeClaim(cgSession sarama.ConsumerGroupSession, cgClaim sarama.ConsumerGroupClaim) error {
-	for {
-		select {
-		case msg, ok := <-cgClaim.Messages():
-			if !ok {
-				return nil
-			}
-			ctx := context.Background()
-
-			cgSession.MarkMessage(msg, "")
-
-			err := retry(h.retries, h.timeout, func() error {
-				return h.msgHandler.Handle(ctx, msg)
-			})
-			h.commitStrategy(cgSession, msg, err)
-			if err != nil {
-
-				return err
-			}
-		case <-cgSession.Context().Done():
-			return nil
-		}
-	}
-}
-
 func retry(retries int, timeout time.Duration, f func() error) (err error) {
 	defer func() {
 		if rvr := recover(); rvr != nil {
 			err = errors.Errorf("panic recovered: %+v, stack: %s", rvr, debug.Stack())
-			//залогать ошибку
+			panic(err)
 		}
 	}()
 	var (
@@ -234,6 +241,37 @@ func WithInitialOffset(offset int64) ConsumeOption {
 	return func(opts *ConsumeOptions) {
 		opts.initialOffset = offset
 	}
+}
+
+func (tc *TopicConsumer) Run(opts ...RunOption) {
+	runOpts := &RunOptions{
+		commitStrategy: func(cgs sarama.ConsumerGroupSession, cm *sarama.ConsumerMessage, e error) {
+			cgs.MarkMessage(cm, "")
+		},
+	}
+	for _, opt := range opts {
+		opt(runOpts)
+	}
+	var ctx context.Context
+	ctx, tc.cancel = context.WithCancel(context.Background())
+	go func() {
+		for {
+			if ctx.Err() == context.Canceled {
+				break
+			}
+			if err := tc.client.Consume(ctx, tc.topics, &handler{
+				msgHandler:     tc.msgHandler,
+				retries:        runOpts.retries,
+				timeout:        runOpts.timeout,
+				setup:          runOpts.setup,
+				cleanup:        runOpts.cleanup,
+				commitStrategy: runOpts.commitStrategy,
+				groupID:        tc.groupID,
+			}); err != nil {
+				//залогать ошибку
+			}
+		}
+	}()
 }
 
 // RunOption ...
