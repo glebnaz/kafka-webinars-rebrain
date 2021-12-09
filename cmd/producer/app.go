@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/glebnaz/kafka-webinars-rebrain/internal/app/models"
 	"net"
 	"net/http"
 
@@ -85,7 +86,7 @@ func newApp(ctx context.Context, grpcOPTS ...grpc.ServerOption) app {
 		log.Fatalf("cfg app is bad: %s", err)
 	}
 
-	srv := services.NewService()
+	srv := services.NewService(models.NewFeedStore())
 
 	//debug port
 	serverDBG := debugServer()

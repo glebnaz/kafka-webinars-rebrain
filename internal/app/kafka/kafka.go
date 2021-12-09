@@ -8,7 +8,6 @@ import (
 	logs "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"runtime/debug"
-	"strings"
 	"time"
 )
 
@@ -94,13 +93,13 @@ type TopicConsumer struct {
 }
 
 func (h *handler) ConsumeClaim(cgSession sarama.ConsumerGroupSession, cgClaim sarama.ConsumerGroupClaim) error {
-	names := strings.Split(h.groupID, ":")
-	service := ""
-	branch := ""
-	if len(names) == 2 {
-		service = names[0]
-		branch = strings.Replace(names[1], "/", "-", -1)
-	}
+	//names := strings.Split(h.groupID, ":")
+	//service := ""
+	//branch := ""
+	//if len(names) == 2 {
+	//	service = names[0]
+	//	branch = strings.Replace(names[1], "/", "-", -1)
+	//}
 
 	for {
 		select {
@@ -125,15 +124,15 @@ func (h *handler) ConsumeClaim(cgSession sarama.ConsumerGroupSession, cgClaim sa
 				span.LogKV("offset", msg.Offset)
 			}
 
-			mCtx, mesh := ExtractMesh(msgCtx, msg.Headers)
-			if mesh != nil {
-				if val, ok := mesh[service]; ok && !strings.EqualFold(val, branch) {
-					continue
-				}
-			}
+			//mCtx, mesh := ExtractMesh(msgCtx, msg.Headers)
+			//if mesh != nil {
+			//	if val, ok := mesh[service]; ok && !strings.EqualFold(val, branch) {
+			//		continue
+			//	}
+			//}
 
 			err = retry(h.retries, h.timeout, func() error {
-				return h.msgHandler.Handle(mCtx, msg)
+				return h.msgHandler.Handle(ctx, msg)
 			})
 			h.commitStrategy(cgSession, msg, err)
 			if err != nil {

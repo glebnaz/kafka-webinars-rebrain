@@ -17,7 +17,7 @@ type TwitterService struct {
 	producer *kafka.SyncProducer
 }
 
-func NewService() *TwitterService {
+func NewService(feed models.FeedStore) *TwitterService {
 	p, err := kafka.NewSyncProducer([]string{"localhost:9092"}, nil)
 	if err != nil {
 		panic(err)
@@ -26,6 +26,7 @@ func NewService() *TwitterService {
 	return &TwitterService{
 		users:    models.NewUsersStore(),
 		producer: p,
+		feed:     feed,
 	}
 }
 

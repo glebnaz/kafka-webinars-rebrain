@@ -85,7 +85,7 @@ func newApp(ctx context.Context, grpcOPTS ...grpc.ServerOption) app {
 		log.Fatalf("cfg app is bad: %s", err)
 	}
 
-	srv := services.NewService()
+	srv := services.NewService(feed)
 
 	//debug port
 	serverDBG := debugServer()

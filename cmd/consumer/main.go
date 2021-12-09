@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/Shopify/sarama"
@@ -30,13 +31,36 @@ type HandlerMsg struct {
 	feed *models.FeedStore
 }
 
+func DecodeB64(message string) (retour string, err error) {
+	base64Text := make([]byte, base64.StdEncoding.DecodedLen(len(message)))
+	_, err = base64.StdEncoding.Decode(base64Text, []byte(message))
+	if err != nil {
+		return "", err
+	}
+	fmt.Printf("base64: %s\n", base64Text)
+	return string(base64Text), nil
+}
+
 func (h HandlerMsg) Handle(ctx context.Context, msg *sarama.ConsumerMessage) error {
 	var post models.Post
 
-	err := json.Unmarshal(msg.Value, &post)
+	fmt.Println(string(msg.Value))
+
+	//byteData,err := base64.StdEncoding.DecodeString(string(bytes.Trim(msg.Value, "\xef\xbb\xbf")))
+	byteData, err := DecodeB64(string(msg.Value[1:(len(msg.Value) - 1)]))
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
+
+	fmt.Println(string(byteData))
+
+	err = json.Unmarshal([]byte(byteData), &post)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
 	fmt.Println(string(msg.Value))
 
 	feed.AddPostToUsers([]int32{1, 2, 3}, post)
@@ -54,7 +78,7 @@ func main() {
 
 	cg := kafka.NewConsumerGroup([]string{"localhost:9092"}, "test")
 
-	con, err := cg.ConsumeTopic(context.Background(), []string{"test"}, msgh, kafka.WithInitialOffset(sarama.OffsetOldest))
+	con, err := cg.ConsumeTopic(context.Background(), []string{"test"}, msgh, kafka.WithInitialOffset(sarama.OffsetNewest))
 	if err != nil {
 		panic(err)
 	}
